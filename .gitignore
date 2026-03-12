@@ -1,0 +1,27 @@
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Mac OS
+.DS_Store
+
+# Logs
+*.log
+streamlit.log
+
+# IDEs
+.idea/
+.vscode/
+
+# We will keep the SQLite database in the repo so the dashboard works out of the box for anyone cloning it.
+# data/*.sqlite  (Commented out so it gets committed)
