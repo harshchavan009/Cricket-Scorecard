@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}IPL Analytics Dashboard{% endblock %}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="glass-nav">
+        <div class="nav-brand">
+            <span class="logo">🏏</span> IPL Analytics
+        </div>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}">Home</a></li>
+            <li><a href="{{ url_for('player_analysis') }}" class="{% if request.endpoint == 'player_analysis' %}active{% endif %}">👤 Players</a></li>
+            <li><a href="{{ url_for('team_analysis') }}" class="{% if request.endpoint == 'team_analysis' %}active{% endif %}">🛡️ Teams</a></li>
+            <li><a href="{{ url_for('match_insights') }}" class="{% if request.endpoint == 'match_insights' %}active{% endif %}">🏟️ Matches</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>Data Source: Wikipedia & Synthetic | Premium Dashboard built with Flask & Vanilla CSS</p>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

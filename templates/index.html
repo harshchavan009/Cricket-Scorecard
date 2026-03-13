@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Home | IPL Analytics{% endblock %}
+
+{% block content %}
+<div class="hero-section glass-panel">
+    <h1 class="main-title gradient-text">Ultimate IPL Experience</h1>
+    <p class="sub-title">A comprehensive data-driven exploration of Indian Premier League stats and trends.</p>
+    
+    <div class="hero-actions">
+        <a href="{{ url_for('player_analysis') }}" class="btn btn-primary">Analyze Players</a>
+        <a href="{{ url_for('team_analysis') }}" class="btn btn-secondary">Explore Teams</a>
+    </div>
+</div>
+
+<div class="section-divider"></div>
+
+<h2 class="section-title">⚡ Quick Facts</h2>
+
+<div class="metrics-grid">
+    <div class="metric-card glass-panel interactive">
+        <div class="metric-icon">🏟️</div>
+        <div class="metric-info">
+            <span class="metric-label">Total Matches (approx)</span>
+            <span class="metric-value">{{ "{:,}".format(facts.total_matches) }}</span>
+        </div>
+    </div>
+    
+    <div class="metric-card glass-panel interactive">
+        <div class="metric-icon">🏏</div>
+        <div class="metric-info">
+            <span class="metric-label">All-time Top Scorer</span>
+            <span class="metric-value">{{ facts.top_scorer_name }}</span>
+            <span class="metric-subtext">{{ "{:,.0f}".format(facts.top_scorer_runs) }} Runs</span>
+        </div>
+    </div>
+    
+    <div class="metric-card glass-panel interactive">
+        <div class="metric-icon">📅</div>
+        <div class="metric-info">
+            <span class="metric-label">Seasons Covered</span>
+            <span class="metric-value">{{ facts.seasons_covered }}</span>
+        </div>
+    </div>
+    
+    <div class="metric-card glass-panel interactive">
+        <div class="metric-icon">✨</div>
+        <div class="metric-info">
+            <span class="metric-label">Dashboard Quality</span>
+            <span class="metric-value">Premium</span>
+            <span class="metric-subtext">Flask + Custom CSS</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

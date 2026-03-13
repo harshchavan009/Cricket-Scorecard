@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Match Insights | IPL Analytics{% endblock %}
+
+{% block content %}
+<div class="page-header glass-panel">
+    <h1 class="main-title gradient-text">🏟️ Match Insights & Trends</h1>
+    <p class="sub-title">Dive into match-level data to discover winning patterns, toss impacts, and venue characteristics.</p>
+</div>
+
+{% if error %}
+    <div class="alert alert-error glass-panel">
+        {{ error }}
+    </div>
+{% else %}
+
+    <div class="filter-bar glass-panel">
+        <form action="{{ url_for('match_insights') }}" method="GET" class="filter-form">
+            <label for="season">Filter by Season:</label>
+            <select name="season" id="season" onchange="this.form.submit()">
+                <option value="All" {% if selected_season == 'All' %}selected{% endif %}>All Seasons</option>
+                {% for s in seasons %}
+                    <option value="{{ s }}" {% if selected_season|string == s|string %}selected{% endif %}>{{ s }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <!-- Toss Impact -->
+    <div class="chart-section glass-panel">
+        <h2 class="section-title">🪙 Toss Impact</h2>
+        <div class="chart-grid grid-2">
+            {% if charts.toss_pie %}
+                <div class="chart-container interactive">
+                    {{ charts.toss_pie | safe }}
+                </div>
+            {% endif %}
+            
+            {% if charts.toss_bar %}
+                <div class="chart-container interactive">
+                    {{ charts.toss_bar | safe }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Venue & Scores -->
+    <div class="chart-grid grid-2">
+        <div class="chart-section glass-panel interactive">
+            <h2 class="section-title">🏟️ Venue Analysis</h2>
+            {% if charts.venues %}
+                {{ charts.venues | safe }}
+            {% endif %}
+        </div>
+        
+        <div class="chart-section glass-panel interactive">
+            <h2 class="section-title">📈 Run Distributions</h2>
+            {% if charts.scores %}
+                {{ charts.scores | safe }}
+            {% endif %}
+        </div>
+    </div>
+
+{% endif %}
+{% endblock %}

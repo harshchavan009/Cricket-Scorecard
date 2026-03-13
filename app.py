@@ -1,104 +1,216 @@
-import streamlit as st
+from flask import Flask, render_template, request
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+from modules.data_loader import load_team_stats, load_batting_stats, load_match_data, load_bowling_stats
+import json
 
-st.set_page_config(
-    page_title="IPL Analytics Dashboard",
-    page_icon="🏏",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+app = Flask(__name__)
 
-# Custom Styling for aesthetics
-st.markdown("""
-<style>
-    .main-title {
-        font-family: 'Helvetica Neue', sans-serif;
-        color: #1E3A8A;
-        font-weight: 800;
-        font-size: 3rem;
-        margin-bottom: 0rem;
-    }
-    .sub-title {
-        font-family: 'Helvetica Neue', sans-serif;
-        color: #4B5563;
-        font-size: 1.2rem;
-        margin-bottom: 2rem;
-    }
-    .metric-card {
-        background-color: #F3F4F6;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    }
-    .stButton>button {
-        background-color: #1E3A8A;
-        color: white;
-        border-radius: 5px;
-        padding: 0.5rem 1rem;
-        font-weight: bold;
-        transition: all 0.3s;
-    }
-    .stButton>button:hover {
-        background-color: #3B82F6;
-        border-color: #3B82F6;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-from modules.data_loader import load_team_stats, load_batting_stats, load_match_data
-
-def main():
-    st.markdown('<h1 class="main-title">🏏 IPL Analytics Dashboard</h1>', unsafe_allow_html=True)
-    st.markdown('<p class="sub-title">A comprehensive data-driven exploration of Indian Premier League stats and trends.</p>', unsafe_allow_html=True)
-    
-    st.markdown("---")
-    
-    st.markdown("### 🏆 Welcome to the Ultimate IPL Experience")
-    st.write("""
-    Explore detailed player career statistics, deep-dive into team historical performances across seasons, 
-    and identify match-winning trends using our interactive visualizer tools.
-    
-    👈 Use the **Sidebar Menu** to navigate between:
-    - 👤 **Player Analysis**: Compare batsmen and bowlers, view strike-rates and dynamic charts.
-    - 🛡️ **Team Analysis**: Monitor win percentages, historical standings, and team head-to-heads.
-    - 🏟️ **Match Insights**: See how the toss, venues, and innings impact match results.
-    """)
-    
-    st.markdown("---")
-    
-    # Showcase some key summary facts dynamically from data
-    st.markdown("### ⚡ Quick Facts")
-    
+# Helper to load data
+def _get_quick_facts():
     team_df = load_team_stats()
     bat_df = load_batting_stats()
     match_df = load_match_data()
     
-    col1, col2, col3, col4 = st.columns(4)
+    facts = {
+        'total_matches': 1000,
+        'top_scorer_name': 'Unknown',
+        'top_scorer_runs': 0,
+        'seasons_covered': 0
+    }
     
-    if not team_df.empty:
-        # Assuming we have a 'Matches Played' or 'Team' columns
-        if 'Matches Played' in team_df.columns:
-            total_matches_franchises = int(team_df['Matches Played'].sum() / 2) # Rough approximation since two teams play a match
-        else:
-            total_matches_franchises = len(match_df) if not match_df.empty else 1000
-        with col1:
-            st.metric("Total Matches (approx)", f"{total_matches_franchises:,}")
-    
-    if not bat_df.empty:
-        if 'Runs' in bat_df.columns:
-            top_scorer = bat_df.iloc[0]
-            with col2:
-                # Top scorer name usually in 'Player' or 'Batsman'
-                player_col = 'Player' if 'Player' in bat_df.columns else bat_df.columns[0]
-                runs_col = 'Runs'
-                st.metric("All-time Top Scorer", top_scorer[player_col], f"{top_scorer[runs_col]} Runs")
-                
+    if not team_df.empty and 'Matches Played' in team_df.columns:
+        facts['total_matches'] = int(team_df['Matches Played'].sum() / 2)
+    elif not match_df.empty:
+        facts['total_matches'] = len(match_df)
+        
+    if not bat_df.empty and 'Runs' in bat_df.columns:
+        player_col = 'Player' if 'Player' in bat_df.columns else bat_df.columns[0]
+        top_scorer = bat_df.iloc[0]
+        facts['top_scorer_name'] = top_scorer[player_col]
+        facts['top_scorer_runs'] = top_scorer['Runs']
+        
     if not match_df.empty and 'Season' in match_df.columns:
-        seasons = match_df['Season'].nunique()
-        with col3:
-            st.metric("Seasons Covered", str(seasons))
-            
-    with col4:
-        st.metric("Data Source", "Wikipedia & Synthetic", "+ High Quality")
+        facts['seasons_covered'] = match_df['Season'].nunique()
+        
+    return facts
 
-if __name__ == "__main__":
-    main()
+@app.route('/')
+def index():
+    facts = _get_quick_facts()
+    return render_template('index.html', facts=facts)
+
+@app.route('/player')
+def player_analysis():
+    bat_df = load_batting_stats()
+    bowl_df = load_bowling_stats()
+    
+    if bat_df.empty and bowl_df.empty:
+        return render_template('player.html', error="No player data available. Please check the database.")
+        
+    charts = {}
+    
+    # --- BATTING CHARTS ---
+    if not bat_df.empty:
+        player_col = 'Player' if 'Player' in bat_df.columns else bat_df.columns[0]
+        runs_col = 'Runs' if 'Runs' in bat_df.columns else (bat_df.columns[2] if len(bat_df.columns)>2 else None)
+        sr_col = 'Strike Rate' if 'Strike Rate' in bat_df.columns else None
+        
+        if runs_col:
+            # Top 50 Batsmen by default
+            bat_df_sorted = bat_df.sort_values(by=runs_col, ascending=False).head(50)
+            
+            # Default comparison: top 5 players
+            top_5_players = bat_df_sorted[player_col].head(5).tolist()
+            filtered_bat = bat_df_sorted[bat_df_sorted[player_col].isin(top_5_players)]
+            
+            fig1 = px.bar(filtered_bat, x=player_col, y=runs_col, color=player_col, 
+                         title="Total Runs by Selected Players",
+                         color_discrete_sequence=['#1E3A8A', '#3A82F6', '#10B981', '#F59E0B', '#EF4444'],
+                         template="plotly_dark")
+            fig1.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
+            charts['bat_bar'] = fig1.to_html(full_html=False, include_plotlyjs=False)
+            
+            if sr_col:
+                # Convert strings to float for scatter plot
+                bat_df_sorted[runs_col] = bat_df_sorted[runs_col].astype(str).str.replace(',', '').astype(float)
+                bat_df_sorted[sr_col] = bat_df_sorted[sr_col].astype(str).str.replace('-', '0').astype(float)
+                
+                fig2 = px.scatter(bat_df_sorted, x=runs_col, y=sr_col, hover_name=player_col,
+                                  size=runs_col, color=sr_col,
+                                  title="Aggression vs Consistency",
+                                  labels={runs_col: "Total Career Runs", sr_col: "Career Strike Rate"},
+                                  template="plotly_dark", size_max=40, color_continuous_scale="Viridis")
+                fig2.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
+                charts['bat_scatter'] = fig2.to_html(full_html=False, include_plotlyjs=False)
+                
+    # --- BOWLING CHARTS ---
+    if not bowl_df.empty:
+        player_col = 'Player' if 'Player' in bowl_df.columns else bowl_df.columns[0]
+        wkts_col = 'Wickets' if 'Wickets' in bowl_df.columns else None
+        
+        if wkts_col:
+            bowl_df_sorted = bowl_df.sort_values(by=wkts_col, ascending=False).head(15)
+            bowl_df_sorted[wkts_col] = bowl_df_sorted[wkts_col].astype(str).str.replace(',', '').astype(float)
+            
+            fig_bowl = px.bar(bowl_df_sorted, x=player_col, y=wkts_col, 
+                              color=wkts_col, color_continuous_scale="Viridis",
+                              title="Top 15 All-Time Wicket Takers", template="plotly_dark")
+            fig_bowl.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
+            charts['bowl_bar'] = fig_bowl.to_html(full_html=False, include_plotlyjs=False)
+
+    return render_template('player.html', charts=charts)
+
+@app.route('/team')
+def team_analysis():
+    team_df = load_team_stats()
+    
+    if team_df.empty:
+        return render_template('team.html', error="No team data available.")
+        
+    charts = {}
+    
+    cols = list(team_df.columns)
+    team_col = win_col = loss_col = win_pct_col = None
+    for c in cols:
+        cl = c.lower()
+        if 'team' in cl or 'franchise' in cl: team_col = c
+        elif 'win' in cl and '%' not in cl and 'percentage' not in cl: win_col = c
+        elif 'loss' in cl: loss_col = c
+        elif '%' in cl or 'rate' in cl: win_pct_col = c
+        
+    if team_col and win_col:
+        team_df[win_col] = team_df[win_col].astype(str).str.replace(r'[^0-9]', '', regex=True).replace('', '0').astype(float)
+        
+        if loss_col:
+            team_df[loss_col] = team_df[loss_col].astype(str).str.replace(r'[^0-9]', '', regex=True).replace('', '0').astype(float)
+        if win_pct_col:
+            team_df[win_pct_col] = team_df[win_pct_col].astype(str).str.replace(r'[^0-9.]', '', regex=True).replace('', '0').astype(float)
+        
+        team_df = team_df.sort_values(by=win_col, ascending=False).head(15)
+        
+        # Wins chart
+        fig1 = px.bar(team_df, x=win_col, y=team_col, orientation='h',
+                      color=win_col, color_continuous_scale="Blues",
+                      template="plotly_dark", title="All-Time Wins by Franchise")
+        fig1.update_layout(yaxis={'categoryorder':'total ascending'}, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
+        charts['wins'] = fig1.to_html(full_html=False, include_plotlyjs=False)
+        
+        if win_pct_col:
+            fig2 = px.bar(team_df.sort_values(by=win_pct_col, ascending=True), 
+                          x=win_pct_col, y=team_col, orientation='h',
+                          color=win_pct_col, color_continuous_scale="RdYlGn",
+                          template="plotly_dark", title="Win Percentage Leaderboard")
+            fig2.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
+            charts['winpct'] = fig2.to_html(full_html=False, include_plotlyjs=False)
+        elif loss_col:
+            melted = pd.melt(team_df, id_vars=[team_col], value_vars=[win_col, loss_col])
+            fig2 = px.bar(melted, x='value', y=team_col, color='variable', barmode='group',
+                          orientation='h', template="plotly_dark",
+                          color_discrete_sequence=['#10B981', '#EF4444'], title="Wins vs Losses")
+            fig2.update_layout(yaxis={'categoryorder':'total ascending'}, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
+            charts['winpct'] = fig2.to_html(full_html=False, include_plotlyjs=False)
+
+    return render_template('team.html', charts=charts)
+
+@app.route('/match')
+def match_insights():
+    match_df = load_match_data()
+    if match_df.empty:
+        return render_template('match.html', error="No match data available.")
+        
+    charts = {}
+    
+    season_filter = request.args.get('season', 'All')
+    seasons = sorted(match_df['Season'].unique().tolist(), reverse=True)
+    
+    filtered_df = match_df if season_filter == 'All' else match_df[match_df['Season'] == season_filter]
+    
+    if not filtered_df.empty:
+        # Toss Impact
+        filtered_df['Toss_Winner_is_Match_Winner'] = filtered_df['Toss_Winner'] == filtered_df['Match_Winner']
+        toss_win_count = filtered_df['Toss_Winner_is_Match_Winner'].value_counts()
+        
+        fig_pie = px.pie(values=toss_win_count.values, names=['Won Match', 'Lost Match'], 
+                         title="Match Outcomes for Toss Winners",
+                         color_discrete_sequence=['#10B981', '#EF4444'], hole=0.4, template="plotly_dark")
+        fig_pie.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
+        charts['toss_pie'] = fig_pie.to_html(full_html=False, include_plotlyjs=False)
+        
+        # Toss Decisions
+        decision_counts = filtered_df['Toss_Decision'].value_counts()
+        fig_bar = px.bar(x=decision_counts.index, y=decision_counts.values,
+                         labels={'x': 'Decision', 'y': 'Number of Matches'},
+                         title="Bat vs Field First", color=decision_counts.index, template="plotly_dark",
+                         color_discrete_sequence=['#3B82F6', '#F59E0B'])
+        fig_bar.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
+        charts['toss_bar'] = fig_bar.to_html(full_html=False, include_plotlyjs=False)
+        
+        # Venues
+        venue_stats = filtered_df.groupby('Venue').agg({
+            'Match_ID': 'count',
+            'First_Innings_Score': 'mean'
+        }).reset_index().rename(columns={'Match_ID': 'Matches Played', 'First_Innings_Score': 'Avg First Innings Score'})
+        venue_stats = venue_stats.sort_values(by='Matches Played', ascending=False).head(10)
+        
+        fig_venue = px.bar(venue_stats, x='Venue', y='Avg First Innings Score',
+                           color='Avg First Innings Score', color_continuous_scale="Oryel",
+                           title="Average 1st Innings Score by Top Venues",
+                           template="plotly_dark")
+        fig_venue.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
+        charts['venues'] = fig_venue.to_html(full_html=False, include_plotlyjs=False)
+        
+        # Score distribution
+        fig_hist = px.histogram(filtered_df, x="First_Innings_Score", nbins=20,
+                                title="Distribution of 1st Innings Scores",
+                                labels={'First_Innings_Score': 'Runs Scored'},
+                                color_discrete_sequence=['#8B5CF6'], opacity=0.8,
+                                template="plotly_dark")
+        fig_hist.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
+        charts['scores'] = fig_hist.to_html(full_html=False, include_plotlyjs=False)
+
+    return render_template('match.html', charts=charts, seasons=seasons, selected_season=season_filter)
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)

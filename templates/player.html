@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Player Analysis | IPL Analytics{% endblock %}
+
+{% block content %}
+<div class="page-header glass-panel">
+    <h1 class="main-title gradient-text">👤 Player Analysis</h1>
+    <p class="sub-title">Analyze top performing batsmen and bowlers across the history of the IPL.</p>
+</div>
+
+{% if error %}
+    <div class="alert alert-error glass-panel">
+        {{ error }}
+    </div>
+{% else %}
+    <div class="content-tabs">
+        <!-- Batting Section -->
+        <div class="chart-section glass-panel">
+            <h2 class="section-title">🏏 Batting Heroes</h2>
+            <div class="chart-grid">
+                {% if charts.bat_bar %}
+                    <div class="chart-container">
+                        {{ charts.bat_bar | safe }}
+                    </div>
+                {% endif %}
+                
+                {% if charts.bat_scatter %}
+                    <div class="chart-container">
+                        {{ charts.bat_scatter | safe }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Bowling Section -->
+        <div class="chart-section glass-panel">
+            <h2 class="section-title">🎯 Bowling Legends</h2>
+            <div class="chart-grid single">
+                {% if charts.bowl_bar %}
+                    <div class="chart-container">
+                        {{ charts.bowl_bar | safe }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
