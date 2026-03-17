@@ -1,11 +1,15 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for, flash
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from modules.data_loader import load_team_stats, load_batting_stats, load_match_data, load_bowling_stats
+from modules.data_loader import (
+    load_team_stats, load_batting_stats, load_match_data, load_bowling_stats,
+    get_table_columns, add_record, delete_record, update_record
+)
 import json
 
 app = Flask(__name__)
+app.secret_key = 'ipl_secret_key' # For flash messages
 
 # Helper to load data
 def _get_quick_facts():
@@ -211,6 +215,36 @@ def match_insights():
         charts['scores'] = fig_hist.to_html(full_html=False, include_plotlyjs=False)
 
     return render_template('match.html', charts=charts, seasons=seasons, selected_season=season_filter)
+
+@app.route('/admin')
+def admin_dashboard():
+    table = request.args.get('table', 'team_stats')
+    df = pd.DataFrame()
+    if table == 'team_stats': df = load_team_stats()
+    elif table == 'batting_stats': df = load_batting_stats()
+    elif table == 'bowling_stats': df = load_bowling_stats()
+    elif table == 'match_data': df = load_match_data()
+    
+    columns = get_table_columns(table)
+    data = df.to_dict('records')
+    
+    return render_template('admin.html', table=table, columns=columns, data=data)
+
+@app.route('/admin/add/<table>', methods=['POST'])
+def admin_add(table):
+    columns = get_table_columns(table)
+    data = {col: request.form.get(col) for col in columns if request.form.get(col)}
+    success, msg = add_record(table, data)
+    if success: flash(f"Record added to {table} successfully!", "success")
+    else: flash(f"Error adding record: {msg}", "error")
+    return redirect(url_for('admin_dashboard', table=table))
+
+@app.route('/admin/delete/<table>/<id_col>/<id_val>', methods=['POST'])
+def admin_delete(table, id_col, id_val):
+    success, msg = delete_record(table, id_col, id_val)
+    if success: flash(f"Record deleted from {table}!", "success")
+    else: flash(f"Error deleting record: {msg}", "error")
+    return redirect(url_for('admin_dashboard', table=table))
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

@@ -24,6 +24,7 @@
             <li><a href="{{ url_for('player_analysis') }}" class="{% if request.endpoint == 'player_analysis' %}active{% endif %}">👤 Players</a></li>
             <li><a href="{{ url_for('team_analysis') }}" class="{% if request.endpoint == 'team_analysis' %}active{% endif %}">🛡️ Teams</a></li>
             <li><a href="{{ url_for('match_insights') }}" class="{% if request.endpoint == 'match_insights' %}active{% endif %}">🏟️ Matches</a></li>
+            <li><a href="{{ url_for('admin_dashboard') }}" class="{% if request.endpoint == 'admin_dashboard' %}active{% endif %}">⚙️ Manage Data</a></li>
         </ul>
     </nav>
 

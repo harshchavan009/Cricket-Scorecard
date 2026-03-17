@@ -422,6 +422,12 @@ h1, h2, h3, h4 {
     color: #FCA5A5;
 }
 
+.alert-success {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #A7F3D0;
+}
+
 /* --- Footer --- */
 footer {
     text-align: center;

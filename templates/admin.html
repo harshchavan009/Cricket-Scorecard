@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard | IPL Analytics{% endblock %}
+
+{% block content %}
+<div class="page-header glass-panel">
+    <h1 class="main-title gradient-text">⚙️ Data Management</h1>
+    <p class="sub-title">Add, view, or remove records from the IPL database.</p>
+</div>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ 'error' if category == 'error' else 'success' }} glass-panel">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<div class="admin-controls glass-panel">
+    <div class="table-selector">
+        <a href="{{ url_for('admin_dashboard', table='team_stats') }}" class="btn {{ 'btn-primary' if table == 'team_stats' else 'btn-secondary' }}">🛡️ Teams</a>
+        <a href="{{ url_for('admin_dashboard', table='batting_stats') }}" class="btn {{ 'btn-primary' if table == 'batting_stats' else 'btn-secondary' }}">🏏 Batting</a>
+        <a href="{{ url_for('admin_dashboard', table='bowling_stats') }}" class="btn {{ 'btn-primary' if table == 'bowling_stats' else 'btn-secondary' }}">🎯 Bowling</a>
+        <a href="{{ url_for('admin_dashboard', table='match_data') }}" class="btn {{ 'btn-primary' if table == 'match_data' else 'btn-secondary' }}">🏟️ Matches</a>
+    </div>
+</div>
+
+<div class="admin-grid">
+    <!-- List View -->
+    <div class="data-view glass-panel">
+        <h2 class="section-title">Current Data: {{ table.replace('_', ' ').title() }}</h2>
+        <div class="table-container">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        {% for col in columns %}
+                            <th>{{ col }}</th>
+                        {% endfor %}
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data %}
+                        <tr>
+                            {% for col in columns %}
+                                <td>{{ row[col] }}</td>
+                            {% endfor %}
+                            <td>
+                                <form action="{{ url_for('admin_delete', table=table, id_col=columns[0], id_val=row[columns[0]]) }}" method="POST" onsubmit="return confirm('Delete this record?')">
+                                    <button type="submit" class="btn-icon">🗑️</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add Form -->
+    <div class="data-form glass-panel">
+        <h2 class="section-title">➕ Add New Record</h2>
+        <form action="{{ url_for('admin_add', table=table) }}" method="POST" class="admin-form">
+            {% for col in columns %}
+                <div class="form-group">
+                    <label for="{{ col }}">{{ col }}</label>
+                    <input type="text" name="{{ col }}" id="{{ col }}" placeholder="Enter {{ col }}...">
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Save Record</button>
+        </form>
+    </div>
+</div>
+
+<style>
+.admin-controls { margin-bottom: 2rem; padding: 1rem; }
+.table-selector { display: flex; gap: 1rem; flex-wrap: wrap; }
+.admin-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; align-items: start; }
+.table-container { overflow-x: auto; max-height: 600px; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.admin-table th, .admin-table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--glass-border); }
+.admin-table th { color: var(--text-secondary); text-transform: uppercase; font-size: 0.75rem; position: sticky; top: 0; background: var(--bg-color); }
+.btn-icon { background: none; border: none; cursor: pointer; font-size: 1.2rem; transition: transform 0.2s; }
+.btn-icon:hover { transform: scale(1.2); }
+.admin-form { display: flex; flex-direction: column; gap: 1rem; }
+.form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+.form-group label { font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; }
+.form-group input { background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); color: white; padding: 0.6rem; border-radius: 6px; outline: none; }
+.form-group input:focus { border-color: var(--accent-blue); }
+
+@media (max-width: 1024px) {
+    .admin-grid { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
