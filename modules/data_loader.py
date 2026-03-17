@@ -1,15 +1,14 @@
 import sqlite3
 import pandas as pd
-import streamlit as st
 import os
 
-DB_PATH = 'data/ipl_data.sqlite'
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+DB_PATH = os.path.join(BASE_DIR, 'data/ipl_data.sqlite')
 
-@st.cache_data
 def load_data(table_name):
     """Load data from SQLite database."""
     if not os.path.exists(DB_PATH):
-        st.error(f"Database not found at {DB_PATH}. Please run scraper.py first.")
+        print(f"Database not found at {DB_PATH}. Please run scraper.py first.")
         return pd.DataFrame()
         
     try:
@@ -18,7 +17,7 @@ def load_data(table_name):
         conn.close()
         return df
     except Exception as e:
-        st.error(f"Error loading {table_name}: {e}")
+        print(f"Error loading {table_name}: {e}")
         return pd.DataFrame()
 
 def load_team_stats():
