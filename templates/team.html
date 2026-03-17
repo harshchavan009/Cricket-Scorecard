@@ -16,13 +16,17 @@
     <div class="chart-grid grid-2">
         {% if charts.wins %}
             <div class="chart-section glass-panel interactive">
-                {{ charts.wins | safe }}
+                <div class="chart-container">
+                    {{ charts.wins | safe }}
+                </div>
             </div>
         {% endif %}
         
         {% if charts.winpct %}
             <div class="chart-section glass-panel interactive">
-                {{ charts.winpct | safe }}
+                <div class="chart-container">
+                    {{ charts.winpct | safe }}
+                </div>
             </div>
         {% endif %}
     </div>

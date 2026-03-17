@@ -49,14 +49,18 @@
         <div class="chart-section glass-panel interactive">
             <h2 class="section-title">🏟️ Venue Analysis</h2>
             {% if charts.venues %}
-                {{ charts.venues | safe }}
+                <div class="chart-container">
+                    {{ charts.venues | safe }}
+                </div>
             {% endif %}
         </div>
         
         <div class="chart-section glass-panel interactive">
             <h2 class="section-title">📈 Run Distributions</h2>
             {% if charts.scores %}
-                {{ charts.scores | safe }}
+                <div class="chart-container">
+                    {{ charts.scores | safe }}
+                </div>
             {% endif %}
         </div>
     </div>
