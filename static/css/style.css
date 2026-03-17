@@ -351,6 +351,9 @@ h1, h2, h3, h4 {
     padding: 1rem;
     border: 1px solid rgba(255,255,255,0.03);
     margin-bottom: 1.5rem;
+    /* FIX: Force Plotly charts to stay inside container */
+    max-width: 100%;
+    overflow-x: auto;
 }
 
 /* --- Forms & Filters --- */

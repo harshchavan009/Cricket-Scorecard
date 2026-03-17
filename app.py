@@ -69,7 +69,7 @@ def player_analysis():
                          title="Total Runs by Selected Players",
                          color_discrete_sequence=['#1E3A8A', '#3A82F6', '#10B981', '#F59E0B', '#EF4444'],
                          template="plotly_dark")
-            fig1.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
+            fig1.update_layout(margin=dict(l=20, r=20, t=40, b=20), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
             charts['bat_bar'] = fig1.to_html(full_html=False, include_plotlyjs=False)
             
             if sr_col:
@@ -82,7 +82,7 @@ def player_analysis():
                                   title="Aggression vs Consistency",
                                   labels={runs_col: "Total Career Runs", sr_col: "Career Strike Rate"},
                                   template="plotly_dark", size_max=40, color_continuous_scale="Viridis")
-                fig2.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
+                fig2.update_layout(margin=dict(l=20, r=20, t=40, b=20), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
                 charts['bat_scatter'] = fig2.to_html(full_html=False, include_plotlyjs=False)
                 
     # --- BOWLING CHARTS ---
@@ -97,7 +97,7 @@ def player_analysis():
             fig_bowl = px.bar(bowl_df_sorted, x=player_col, y=wkts_col, 
                               color=wkts_col, color_continuous_scale="Viridis",
                               title="Top 15 All-Time Wicket Takers", template="plotly_dark")
-            fig_bowl.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
+            fig_bowl.update_layout(margin=dict(l=20, r=20, t=40, b=20), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
             charts['bowl_bar'] = fig_bowl.to_html(full_html=False, include_plotlyjs=False)
 
     return render_template('player.html', charts=charts)
@@ -134,7 +134,7 @@ def team_analysis():
         fig1 = px.bar(team_df, x=win_col, y=team_col, orientation='h',
                       color=win_col, color_continuous_scale="Blues",
                       template="plotly_dark", title="All-Time Wins by Franchise")
-        fig1.update_layout(yaxis={'categoryorder':'total ascending'}, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
+        fig1.update_layout(margin=dict(l=20, r=20, t=40, b=20), yaxis={'categoryorder':'total ascending'}, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
         charts['wins'] = fig1.to_html(full_html=False, include_plotlyjs=False)
         
         if win_pct_col:
@@ -142,14 +142,14 @@ def team_analysis():
                           x=win_pct_col, y=team_col, orientation='h',
                           color=win_pct_col, color_continuous_scale="RdYlGn",
                           template="plotly_dark", title="Win Percentage Leaderboard")
-            fig2.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
+            fig2.update_layout(margin=dict(l=20, r=20, t=40, b=20), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
             charts['winpct'] = fig2.to_html(full_html=False, include_plotlyjs=False)
         elif loss_col:
             melted = pd.melt(team_df, id_vars=[team_col], value_vars=[win_col, loss_col])
             fig2 = px.bar(melted, x='value', y=team_col, color='variable', barmode='group',
                           orientation='h', template="plotly_dark",
                           color_discrete_sequence=['#10B981', '#EF4444'], title="Wins vs Losses")
-            fig2.update_layout(yaxis={'categoryorder':'total ascending'}, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
+            fig2.update_layout(margin=dict(l=20, r=20, t=40, b=20), yaxis={'categoryorder':'total ascending'}, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
             charts['winpct'] = fig2.to_html(full_html=False, include_plotlyjs=False)
 
     return render_template('team.html', charts=charts)
@@ -175,7 +175,7 @@ def match_insights():
         fig_pie = px.pie(values=toss_win_count.values, names=['Won Match', 'Lost Match'], 
                          title="Match Outcomes for Toss Winners",
                          color_discrete_sequence=['#10B981', '#EF4444'], hole=0.4, template="plotly_dark")
-        fig_pie.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
+        fig_pie.update_layout(margin=dict(l=20, r=20, t=40, b=20), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
         charts['toss_pie'] = fig_pie.to_html(full_html=False, include_plotlyjs=False)
         
         # Toss Decisions
@@ -184,7 +184,7 @@ def match_insights():
                          labels={'x': 'Decision', 'y': 'Number of Matches'},
                          title="Bat vs Field First", color=decision_counts.index, template="plotly_dark",
                          color_discrete_sequence=['#3B82F6', '#F59E0B'])
-        fig_bar.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
+        fig_bar.update_layout(margin=dict(l=20, r=20, t=40, b=20), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
         charts['toss_bar'] = fig_bar.to_html(full_html=False, include_plotlyjs=False)
         
         # Venues
@@ -198,7 +198,7 @@ def match_insights():
                            color='Avg First Innings Score', color_continuous_scale="Oryel",
                            title="Average 1st Innings Score by Top Venues",
                            template="plotly_dark")
-        fig_venue.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
+        fig_venue.update_layout(margin=dict(l=20, r=20, t=40, b=20), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
         charts['venues'] = fig_venue.to_html(full_html=False, include_plotlyjs=False)
         
         # Score distribution
@@ -207,7 +207,7 @@ def match_insights():
                                 labels={'First_Innings_Score': 'Runs Scored'},
                                 color_discrete_sequence=['#8B5CF6'], opacity=0.8,
                                 template="plotly_dark")
-        fig_hist.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
+        fig_hist.update_layout(margin=dict(l=20, r=20, t=40, b=20), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
         charts['scores'] = fig_hist.to_html(full_html=False, include_plotlyjs=False)
 
     return render_template('match.html', charts=charts, seasons=seasons, selected_season=season_filter)
